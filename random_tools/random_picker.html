@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阎王点卯器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .result-area {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-area.spinning {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-color: #fff;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            color: #495057;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .result-text.final {
+            font-size: 2rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .draw-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            margin: 10px;
+        }
+
+        .draw-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .draw-button:active {
+            transform: translateY(0);
+        }
+
+        .draw-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px; /* 用 gap 统一控制间距 */
+        }
+
+        /* 统一移除按钮自身的 margin，避免与 gap 冲突导致错位 */
+        .controls .draw-button,
+        .controls .reset-button,
+        .controls .config-button {
+            margin: 0;
+        }
+
+        .draw-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 5px 15px;
+            border-radius: 50px;
+        }
+
+        .draw-controls label {
+            font-size: 1rem;
+            color: #495057;
+            font-weight: 500;
+            white-space: nowrap; /* 避免短标签换行 */
+        }
+
+        #drawCount {
+            width: 60px;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #ced4da;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .reset-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0; /* 取消 margin，避免与 gap 冲突 */
+        }
+
+        .reset-button:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .config-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0; /* 取消 margin，避免与 gap 冲突 */
+        }
+
+        .config-button:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .stats {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .stats h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .selected-list {
+            background: #fff3cd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .selected-list h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .selected-item {
+            background: #ffeaa7;
+            display: inline-block;
+            margin: 3px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #795548;
+        }
+
+        .config-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            display: none;
+        }
+
+        .config-area h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        #peopleConfig {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        #saveConfigButton {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        #saveConfigButton:hover {
+            background: #218838;
+        }
+
+        #toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            z-index: 1000;
+            transition: top 0.5s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* 移动端优化：控件纵向堆叠并全宽显示，避免拥挤错位 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .result-text {
+                font-size: 1.2rem;
+            }
+            
+            .result-text.final {
+                font-size: 1.5rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .draw-controls {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast"></div>
+    <div class="container">
+        <h1>阎王点卯器</h1>
+        
+        <div class="result-area" id="resultArea">
+            <div class="result-text" id="resultText">点击抽取按钮开始！</div>
+        </div>
+        
+        <div class="controls">
+            <div class="draw-controls">
+                <label for="drawCount">每次抽</label>
+                <input type="number" id="drawCount" value="1" min="1">
+                <label for="drawCount">人</label>
+            </div>
+            <button class="draw-button" id="drawButton" onclick="startDraw()">🎲 开始抽取</button>
+            <button class="reset-button" id="resetButton" onclick="resetAll()">🔄 重置</button>
+            <button class="config-button" id="configButton" onclick="toggleConfig()">⚙️ 人员配置</button>
+        </div>
+        
+        <div class="config-area" id="configArea">
+            <h4>⚙️ 名单配置</h4>
+            <textarea id="peopleConfig" aria-label="名单配置" rows="8" placeholder="每行输入一个名字..."></textarea>
+            <button id="saveConfigButton" class="draw-button" style="background: #28a745;" onclick="saveConfig()">💾 保存名单</button>
+        </div>
+
+        <div class="stats">
+            <h3>📊 统计信息</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalCount">33</span>
+                    <div class="stat-label">总人数</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="remainingCount">33</span>
+                    <div class="stat-label">剩余人数</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="selectedCount">0</span>
+                    <div class="stat-label">已抽取</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="selected-list" id="selectedList" style="display: none;">
+            <h4>🎯 已抽取名单</h4>
+            <div id="selectedItems"></div>
+        </div>
+    </div>
+
+    <script>
+        let people = [];
+        const defaultPeople = [
+            "1301-杭州-呼呼",
+            "1302-大连-狗子", 
+            "1303-北京-聪明的孩子",
+            "1304-上海-404",
+            "1305-北京-NICE",
+            "1306-成都-老曹",
+            "1307-深圳-橙子",
+            "1308-上海-悠然",
+            "1309-上海-垫底",
+            "1310-天津-平头哥",
+            "1311-成都-小队长",
+            "1312-长沙-锤锤",
+            "1313-杭州-JOJO",
+            "1314-北京-三笨",
+            "1315-深圳-江崖",
+            "1316-杭州-无忌",
+            "1317-合肥-zX",
+            "1318-北京-Carry",
+            "1319-上海-星期五",
+            "1320-杭州-大窑",
+            "1321-广州-大头",
+            "1322-无锡-jin",
+            "1323-成都-ZZ",
+            "1324-上海-Jiang",
+            "1325-杭州-AI菜鸡",
+            "1326-成都-女装大佬",
+            "1327-上海-波哥大",
+            "1329-北京-把伤痕当",
+            "1330-上海-老代",
+            "1331-北京-兰新",
+            "1332-上海-果茶",
+            "1333-杭州-小绮同学",
+            "1334-吉林-扎啤"
+        ];
+
+        let remainingPeople = [];
+        let selectedPeople = [];
+        let isDrawing = false;
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.top = '20px';
+            setTimeout(() => {
+                toast.style.top = '-100px';
+            }, 2000);
+        }
+
+        function toggleConfig() {
+            const configArea = document.getElementById('configArea');
+            if (configArea.style.display === 'none' || configArea.style.display === '') {
+                configArea.style.display = 'block';
+            } else {
+                configArea.style.display = 'none';
+            }
+        }
+
+        function saveConfig() {
+            const peopleConfigTextarea = document.getElementById('peopleConfig');
+            const newPeople = peopleConfigTextarea.value.split('\n').map(p => p.trim()).filter(p => p);
+
+            if (newPeople.length > 0) {
+                localStorage.setItem('picker_people', JSON.stringify(newPeople));
+                people = newPeople;
+                showToast('名单已保存！');
+                resetAll();
+                document.getElementById('configArea').style.display = 'none';
+            } else {
+                alert('名单不能为空！');
+            }
+        }
+
+        function loadConfig() {
+            const savedPeople = localStorage.getItem('picker_people');
+            const peopleConfigTextarea = document.getElementById('peopleConfig');
+
+            if (savedPeople) {
+                people = JSON.parse(savedPeople);
+            } else {
+                people = [...defaultPeople];
+            }
+            peopleConfigTextarea.value = people.join('\n');
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = people.length;
+            document.getElementById('remainingCount').textContent = remainingPeople.length;
+            document.getElementById('selectedCount').textContent = selectedPeople.length;
+        }
+
+        function updateSelectedList() {
+            const selectedList = document.getElementById('selectedList');
+            const selectedItems = document.getElementById('selectedItems');
+            
+            if (selectedPeople.length > 0) {
+                selectedList.style.display = 'block';
+                selectedItems.innerHTML = selectedPeople.map(person => 
+                    `<span class="selected-item">${person}</span>`
+                ).join('');
+            } else {
+                selectedList.style.display = 'none';
+            }
+        }
+
+        function startDraw() {
+            if (isDrawing || remainingPeople.length === 0) return;
+            
+            isDrawing = true;
+            const drawButton = document.getElementById('drawButton');
+            const resultArea = document.getElementById('resultArea');
+            const resultText = document.getElementById('resultText');
+            const drawCountInput = document.getElementById('drawCount');
+            const drawCount = Math.min(Math.max(parseInt(drawCountInput.value) || 1, 1), remainingPeople.length);
+
+            drawButton.disabled = true;
+            drawButton.textContent = '🎲 抽取中...';
+            resultArea.classList.add('spinning');
+            resultText.classList.remove('final');
+            
+            // 旋转动画效果
+            let spinCount = 0;
+            const maxSpins = 20 + Math.floor(Math.random() * 30);
+            
+            const spinInterval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * remainingPeople.length);
+                resultText.textContent = remainingPeople[randomIndex];
+                spinCount++;
+                
+                if (spinCount >= maxSpins) {
+                    clearInterval(spinInterval);
+                    finalizeDraw(drawCount);
+                }
+            }, 100);
+        }
+
+        function finalizeDraw(drawCount) {
+            const selected = [];
+
+            // 随机抽取指定人数
+            for (let i = 0; i < drawCount; i++) {
+                const randomIndex = Math.floor(Math.random() * remainingPeople.length);
+                selected.push(remainingPeople[randomIndex]);
+
+                // 移除选中的人员
+                remainingPeople.splice(randomIndex, 1);
+            }
+
+            // 更新已抽取名单
+            selectedPeople = [...selectedPeople, ...selected];
+
+            // 更新界面
+            const drawButton = document.getElementById('drawButton');
+            const resultArea = document.getElementById('resultArea');
+            const resultText = document.getElementById('resultText');
+            
+            setTimeout(() => {
+                resultArea.classList.remove('spinning');
+                resultText.classList.add('final');
+                resultText.innerHTML = `🎉 ${selected.join('，')}`;
+
+                drawButton.disabled = false;
+                drawButton.textContent = remainingPeople.length > 0 ? '🎲 再次抽取' : '✅ 抽取完毕';
+                
+                updateStats();
+                updateSelectedList();
+                isDrawing = false;
+                
+                // 庆祝动画
+                setTimeout(() => {
+                    resultArea.style.background = '#f8f9fa';
+                    resultText.classList.remove('final');
+                    resultText.style.color = '#495057';
+                }, 3000);
+                
+            }, 500);
+        }
+
+        function resetAll() {
+            remainingPeople = [...people];
+            selectedPeople = [];
+            isDrawing = false;
+            
+            const drawButton = document.getElementById('drawButton');
+            const resultArea = document.getElementById('resultArea');
+            const resultText = document.getElementById('resultText');
+            
+            drawButton.disabled = false;
+            drawButton.textContent = '🎲 开始抽取';
+            resultArea.classList.remove('spinning');
+            resultArea.style.background = '#f8f9fa';
+            resultText.classList.remove('final');
+            resultText.textContent = '点击抽取按钮开始！';
+            resultText.style.color = '#495057';
+            
+            updateStats();
+            updateSelectedList();
+        }
+
+        // 初始化
+        loadConfig();
+        resetAll();
+    </script>
+</body>
+</html>
