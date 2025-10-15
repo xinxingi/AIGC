@@ -11,9 +11,50 @@ from ttkbootstrap import Style
 from ttkbootstrap import ttk  # 使用 ttkbootstrap 的 ttk 小部件
 from ttkbootstrap.constants import PRIMARY
 from ttkbootstrap.dialogs import Messagebox
+import sys
+import shutil
 
 
-DATA_FILE = Path(__file__).with_name("participants.json")
+APP_NAME = "LuckyDraw"
+
+# 兼容 PyInstaller 打包后的资源定位
+# 当被 PyInstaller 冻结时，sys._MEIPASS 指向临时解包目录的根
+# 我们将 participants.json 放在应用根目录（见打包脚本中的 --add-data 配置）
+# 同时在冻结态时，把数据文件复制到用户可写目录（~/.luckydraw）供读写
+
+def _resource_path(name: str) -> Path:
+	try:
+		base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+	except Exception:
+		base = Path(__file__).parent
+	return base / name
+
+
+def _data_file_path() -> Path:
+	res_file = _resource_path("participants.json")
+	# 非冻结态：直接读写项目内文件，便于开发
+	if not getattr(sys, "frozen", False):
+		return res_file
+	# 冻结态：使用用户家目录下的可写文件
+	user_dir = Path.home() / ".luckydraw"
+	user_dir.mkdir(parents=True, exist_ok=True)
+	user_file = user_dir / "participants.json"
+	if not user_file.exists():
+		try:
+			if res_file.exists():
+				shutil.copy2(res_file, user_file)
+			else:
+				user_file.write_text("[]", encoding="utf-8")
+		except Exception:
+			# 回退写入空数组
+			try:
+				user_file.write_text("[]", encoding="utf-8")
+			except Exception:
+				pass
+	return user_file
+
+
+DATA_FILE = _data_file_path()
 
 
 class LuckyDrawApp:
