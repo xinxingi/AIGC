@@ -179,9 +179,9 @@
             color: white;
             border: none;
             padding: 10px 25px;
-            font-size: 1rem;
-            font-weight: 500;
-            border-radius: 25px;
+            font-size: 1.2rem; /* 统一字体大小 */
+            font-weight: 600; /* 统一字体粗细 */
+            border-radius: 50px; /* 统一圆角 */
             cursor: pointer;
             transition: all 0.3s ease;
             margin: 0;
@@ -197,9 +197,9 @@
             color: white;
             border: none;
             padding: 10px 25px;
-            font-size: 1rem;
-            font-weight: 500;
-            border-radius: 25px;
+            font-size: 1.2rem; /* 统一字体大小 */
+            font-weight: 600; /* 统一字体粗细 */
+            border-radius: 50px; /* 统一圆角 */
             cursor: pointer;
             transition: all 0.3s ease;
             margin: 0;
@@ -408,7 +408,7 @@
             <!-- 新增：重复抽取选项 -->
             <div class="repeat-controls">
                 <input type="checkbox" id="allowRepeat" class="repeat-checkbox">
-                <label for="allowRepeat">允许重复抽取</label>
+                <label for="allowRepeat">重复抽取</label>
             </div>
 
             <div>
@@ -555,10 +555,10 @@
             const allowRepeat = document.getElementById('allowRepeat').checked;
             
             if (allowRepeat) {
-                modeInfo.textContent = '🔄 重复模式：允许同一人被多次抽中，每次抽取都从完整名单中选择';
+                modeInfo.textContent = '重复模式：允许同一人被多次抽中，每次抽取都从完整名单中选择';
                 modeInfo.className = 'mode-info repeat-mode';
             } else {
-                modeInfo.textContent = '🚫 不重复模式：每人只能被抽中一次，抽完后从候选池中移除';
+                modeInfo.textContent = '不重复模式：每人只能被抽中一次，抽完后从候选池中移除';
                 modeInfo.className = 'mode-info';
             }
         }
