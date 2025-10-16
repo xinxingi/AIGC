@@ -85,7 +85,7 @@
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 10px 25px;
             font-size: 1.2rem;
             font-weight: 600;
             border-radius: 50px;
@@ -116,10 +116,9 @@
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            gap: 12px; /* 用 gap 统一控制间距 */
+            gap: 12px;
         }
 
-        /* 统一移除按钮自身的 margin，避免与 gap 冲突导致错位 */
         .controls .draw-button,
         .controls .reset-button,
         .controls .config-button {
@@ -139,7 +138,7 @@
             font-size: 1rem;
             color: #495057;
             font-weight: 500;
-            white-space: nowrap; /* 避免短标签换行 */
+            white-space: nowrap;
         }
 
         #drawCount {
@@ -149,6 +148,30 @@
             border: 1px solid #ced4da;
             text-align: center;
             font-size: 1rem;
+        }
+
+        /* 新增：重复抽取选项样式 */
+        .repeat-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 25px;
+            border-radius: 50px;
+        }
+
+        .repeat-controls label {
+            font-size: 0.95rem;
+            color: #0c5460;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .repeat-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #17a2b8;
+            cursor: pointer;
         }
 
         .reset-button {
@@ -161,7 +184,7 @@
             border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 0; /* 取消 margin，避免与 gap 冲突 */
+            margin: 0;
         }
 
         .reset-button:hover {
@@ -179,7 +202,7 @@
             border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 0; /* 取消 margin，避免与 gap 冲突 */
+            margin: 0;
         }
 
         .config-button:hover {
@@ -251,6 +274,13 @@
             color: #795548;
         }
 
+        /* 新增：重复抽取状态下的已选中样式 */
+        .selected-item.repeated {
+            background: #ffd93d;
+            border: 2px solid #f39c12;
+            font-weight: 600;
+        }
+
         .config-area {
             background: #f8f9fa;
             border-radius: 10px;
@@ -306,7 +336,24 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        /* 移动端优化：控件纵向堆叠并全宽显示，避免拥挤错位 */
+        /* 新增：模式提示信息样式 */
+        .mode-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+            color: #0c5460;
+            text-align: center;
+        }
+
+        .mode-info.repeat-mode {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 30px 20px;
@@ -330,7 +377,8 @@
                 gap: 12px;
             }
 
-            .draw-controls {
+            .draw-controls,
+            .repeat-controls {
                 width: 100%;
                 justify-content: center;
             }
@@ -356,9 +404,25 @@
                 <input type="number" id="drawCount" value="1" min="1">
                 <label for="drawCount">人</label>
             </div>
-            <button class="draw-button" id="drawButton" onclick="startDraw()">🎲 开始抽取</button>
-            <button class="reset-button" id="resetButton" onclick="resetAll()">🔄 重置</button>
-            <button class="config-button" id="configButton" onclick="toggleConfig()">⚙️ 人员配置</button>
+            
+            <!-- 新增：重复抽取选项 -->
+            <div class="repeat-controls">
+                <input type="checkbox" id="allowRepeat" class="repeat-checkbox">
+                <label for="allowRepeat">允许重复抽取</label>
+            </div>
+
+            <div>
+                <button class="draw-button" id="drawButton" onclick="startDraw()">🎲 开始抽取</button>
+                <button class="reset-button" id="resetButton" onclick="resetAll()">🔄 重置</button>
+                <button class="config-button" id="configButton" onclick="toggleConfig()">⚙️ 人员配置</button>
+            </div>
+            
+
+        </div>
+        
+        <!-- 新增：模式提示信息 -->
+        <div class="mode-info" id="modeInfo">
+            🚫 不重复模式：每人只能被抽中一次，抽完后从候选池中移除
         </div>
         
         <div class="config-area" id="configArea">
@@ -376,17 +440,22 @@
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="remainingCount">33</span>
-                    <div class="stat-label">剩余人数</div>
+                    <div class="stat-label" id="remainingLabel">剩余人数</div>
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="selectedCount">0</span>
                     <div class="stat-label">已抽取</div>
                 </div>
+                <!-- 新增：重复抽取次数统计 -->
+                <div class="stat-item" id="repeatCountStat" style="display: none;">
+                    <span class="stat-value" id="repeatCount">0</span>
+                    <div class="stat-label">重复抽取次数</div>
+                </div>
             </div>
         </div>
         
         <div class="selected-list" id="selectedList" style="display: none;">
-            <h4>🎯 已抽取名单</h4>
+            <h4 id="selectedListTitle">🎯 已抽取名单</h4>
             <div id="selectedItems"></div>
         </div>
     </div>
@@ -431,6 +500,8 @@
 
         let remainingPeople = [];
         let selectedPeople = [];
+        let selectedHistory = []; // 新增：记录所有抽取历史（包括重复的）
+        let repeatCounts = {}; // 新增：记录每个人被抽中的次数
         let isDrawing = false;
 
         function showToast(message) {
@@ -478,35 +549,91 @@
             peopleConfigTextarea.value = people.join('\n');
         }
 
+        // 新增：更新模式提示信息
+        function updateModeInfo() {
+            const modeInfo = document.getElementById('modeInfo');
+            const allowRepeat = document.getElementById('allowRepeat').checked;
+            
+            if (allowRepeat) {
+                modeInfo.textContent = '🔄 重复模式：允许同一人被多次抽中，每次抽取都从完整名单中选择';
+                modeInfo.className = 'mode-info repeat-mode';
+            } else {
+                modeInfo.textContent = '🚫 不重复模式：每人只能被抽中一次，抽完后从候选池中移除';
+                modeInfo.className = 'mode-info';
+            }
+        }
+
         function updateStats() {
+            const allowRepeat = document.getElementById('allowRepeat').checked;
+            
             document.getElementById('totalCount').textContent = people.length;
-            document.getElementById('remainingCount').textContent = remainingPeople.length;
-            document.getElementById('selectedCount').textContent = selectedPeople.length;
+            document.getElementById('selectedCount').textContent = selectedHistory.length;
+            
+            if (allowRepeat) {
+                // 重复模式下，剩余人数始终等于总人数
+                document.getElementById('remainingCount').textContent = people.length;
+                document.getElementById('remainingLabel').textContent = '可选人数';
+                
+                // 显示重复次数统计
+                document.getElementById('repeatCountStat').style.display = 'block';
+                const totalRepeats = Object.values(repeatCounts).reduce((sum, count) => sum + Math.max(0, count - 1), 0);
+                document.getElementById('repeatCount').textContent = totalRepeats;
+            } else {
+                // 不重复模式下，显示实际剩余人数
+                document.getElementById('remainingCount').textContent = remainingPeople.length;
+                document.getElementById('remainingLabel').textContent = '剩余人数';
+                
+                // 隐藏重复次数统计
+                document.getElementById('repeatCountStat').style.display = 'none';
+            }
         }
 
         function updateSelectedList() {
             const selectedList = document.getElementById('selectedList');
             const selectedItems = document.getElementById('selectedItems');
+            const selectedListTitle = document.getElementById('selectedListTitle');
+            const allowRepeat = document.getElementById('allowRepeat').checked;
             
-            if (selectedPeople.length > 0) {
+            if (selectedHistory.length > 0) {
                 selectedList.style.display = 'block';
-                selectedItems.innerHTML = selectedPeople.map(person => 
-                    `<span class="selected-item">${person}</span>`
-                ).join('');
+                
+                if (allowRepeat) {
+                    // 重复模式：显示所有抽取历史，标出重复项
+                    selectedListTitle.textContent = `🎯 抽取历史 (共${selectedHistory.length}次)`;
+                    selectedItems.innerHTML = selectedHistory.map(person => {
+                        const count = repeatCounts[person] || 0;
+                        const isRepeated = count > 1;
+                        return `<span class="selected-item ${isRepeated ? 'repeated' : ''}">${person}${isRepeated ? ` (${count}次)` : ''}</span>`;
+                    }).join('');
+                } else {
+                    // 不重复模式：只显示已抽取的唯一人员
+                    selectedListTitle.textContent = '🎯 已抽取名单';
+                    selectedItems.innerHTML = selectedPeople.map(person => 
+                        `<span class="selected-item">${person}</span>`
+                    ).join('');
+                }
             } else {
                 selectedList.style.display = 'none';
             }
         }
 
         function startDraw() {
-            if (isDrawing || remainingPeople.length === 0) return;
+            const allowRepeat = document.getElementById('allowRepeat').checked;
+            const availablePeople = allowRepeat ? people : remainingPeople;
+            
+            if (isDrawing || availablePeople.length === 0) {
+                if (availablePeople.length === 0 && !allowRepeat) {
+                    showToast('所有人员已被抽完！');
+                }
+                return;
+            }
             
             isDrawing = true;
             const drawButton = document.getElementById('drawButton');
             const resultArea = document.getElementById('resultArea');
             const resultText = document.getElementById('resultText');
             const drawCountInput = document.getElementById('drawCount');
-            const drawCount = Math.min(Math.max(parseInt(drawCountInput.value) || 1, 1), remainingPeople.length);
+            const drawCount = Math.min(Math.max(parseInt(drawCountInput.value) || 1, 1), availablePeople.length);
 
             drawButton.disabled = true;
             drawButton.textContent = '🎲 抽取中...';
@@ -518,31 +645,46 @@
             const maxSpins = 20 + Math.floor(Math.random() * 30);
             
             const spinInterval = setInterval(() => {
-                const randomIndex = Math.floor(Math.random() * remainingPeople.length);
-                resultText.textContent = remainingPeople[randomIndex];
+                const randomIndex = Math.floor(Math.random() * availablePeople.length);
+                resultText.textContent = availablePeople[randomIndex];
                 spinCount++;
                 
                 if (spinCount >= maxSpins) {
                     clearInterval(spinInterval);
-                    finalizeDraw(drawCount);
+                    finalizeDraw(drawCount, allowRepeat);
                 }
             }, 100);
         }
 
-        function finalizeDraw(drawCount) {
+        function finalizeDraw(drawCount, allowRepeat) {
             const selected = [];
+            const availablePeople = allowRepeat ? people : remainingPeople;
 
             // 随机抽取指定人数
             for (let i = 0; i < drawCount; i++) {
-                const randomIndex = Math.floor(Math.random() * remainingPeople.length);
-                selected.push(remainingPeople[randomIndex]);
+                const randomIndex = Math.floor(Math.random() * availablePeople.length);
+                const selectedPerson = availablePeople[randomIndex];
+                selected.push(selectedPerson);
 
-                // 移除选中的人员
-                remainingPeople.splice(randomIndex, 1);
+                // 更新抽取历史和计数
+                selectedHistory.push(selectedPerson);
+                repeatCounts[selectedPerson] = (repeatCounts[selectedPerson] || 0) + 1;
+
+                if (!allowRepeat) {
+                    // 不重复模式：从剩余人员中移除
+                    const remainingIndex = remainingPeople.indexOf(selectedPerson);
+                    if (remainingIndex > -1) {
+                        remainingPeople.splice(remainingIndex, 1);
+                    }
+                    // 同时从可用列表中移除（为下次循环准备）
+                    availablePeople.splice(randomIndex, 1);
+                    
+                    // 添加到已选中列表（不重复模式特有）
+                    if (!selectedPeople.includes(selectedPerson)) {
+                        selectedPeople.push(selectedPerson);
+                    }
+                }
             }
-
-            // 更新已抽取名单
-            selectedPeople = [...selectedPeople, ...selected];
 
             // 更新界面
             const drawButton = document.getElementById('drawButton');
@@ -552,14 +694,32 @@
             setTimeout(() => {
                 resultArea.classList.remove('spinning');
                 resultText.classList.add('final');
-                resultText.innerHTML = `🎉 ${selected.join('，')}`;
+                
+                // 显示抽取结果，重复抽取时显示次数
+                if (allowRepeat && selected.length === 1) {
+                    const person = selected[0];
+                    const count = repeatCounts[person];
+                    resultText.innerHTML = `🎉 ${person}${count > 1 ? ` (第${count}次)` : ''}`;
+                } else {
+                    resultText.innerHTML = `🎉 ${selected.join('，')}`;
+                }
 
+                // 更新按钮状态
                 drawButton.disabled = false;
-                drawButton.textContent = remainingPeople.length > 0 ? '🎲 再次抽取' : '✅ 抽取完毕';
+                if (allowRepeat) {
+                    drawButton.textContent = '🎲 再次抽取';
+                } else {
+                    drawButton.textContent = remainingPeople.length > 0 ? '🎲 再次抽取' : '✅ 抽取完毕';
+                }
                 
                 updateStats();
                 updateSelectedList();
                 isDrawing = false;
+                
+                // 显示抽取提示
+                if (allowRepeat && repeatCounts[selected[0]] > 1) {
+                    showToast(`${selected[0]} 已被抽中 ${repeatCounts[selected[0]]} 次`);
+                }
                 
                 // 庆祝动画
                 setTimeout(() => {
@@ -574,6 +734,8 @@
         function resetAll() {
             remainingPeople = [...people];
             selectedPeople = [];
+            selectedHistory = []; // 重置抽取历史
+            repeatCounts = {}; // 重置重复计数
             isDrawing = false;
             
             const drawButton = document.getElementById('drawButton');
@@ -590,10 +752,37 @@
             
             updateStats();
             updateSelectedList();
+            updateModeInfo();
+        }
+
+        // 新增：监听重复抽取选项变化
+        document.getElementById('allowRepeat').addEventListener('change', function() {
+            updateModeInfo();
+            updateStats();
+            updateSelectedList();
+            
+            // 保存用户偏好
+            localStorage.setItem('picker_allow_repeat', this.checked);
+            
+            // 提示用户模式已切换
+            if (this.checked) {
+                showToast('已切换到重复抽取模式');
+            } else {
+                showToast('已切换到不重复抽取模式');
+            }
+        });
+
+        // 新增：加载用户偏好设置
+        function loadUserPreferences() {
+            const savedAllowRepeat = localStorage.getItem('picker_allow_repeat');
+            if (savedAllowRepeat !== null) {
+                document.getElementById('allowRepeat').checked = savedAllowRepeat === 'true';
+            }
         }
 
         // 初始化
         loadConfig();
+        loadUserPreferences(); // 加载用户偏好
         resetAll();
     </script>
 </body>
