@@ -658,32 +658,47 @@
 
         function finalizeDraw(drawCount, allowRepeat) {
             const selected = [];
-            const availablePeople = allowRepeat ? people : remainingPeople;
 
-            // 随机抽取指定人数
-            for (let i = 0; i < drawCount; i++) {
-                const randomIndex = Math.floor(Math.random() * availablePeople.length);
-                const selectedPerson = availablePeople[randomIndex];
-                selected.push(selectedPerson);
+            if (allowRepeat) {
+                // 重复模式：可以重复抽取同一个人
+                for (let i = 0; i < drawCount; i++) {
+                    const randomIndex = Math.floor(Math.random() * people.length);
+                    const selectedPerson = people[randomIndex];
+                    selected.push(selectedPerson);
 
-                // 更新抽取历史和计数
-                selectedHistory.push(selectedPerson);
-                repeatCounts[selectedPerson] = (repeatCounts[selectedPerson] || 0) + 1;
+                    // 更新抽取历史和计数
+                    selectedHistory.push(selectedPerson);
+                    repeatCounts[selectedPerson] = (repeatCounts[selectedPerson] || 0) + 1;
+                }
+            } else {
+                // 不重复模式：使用临时数组避免修改原数组
+                const tempAvailable = [...remainingPeople];
 
-                if (!allowRepeat) {
-                    // 不重复模式：从剩余人员中移除
-                    const remainingIndex = remainingPeople.indexOf(selectedPerson);
-                    if (remainingIndex > -1) {
-                        remainingPeople.splice(remainingIndex, 1);
-                    }
-                    // 同时从可用列表中移除（为下次循环准备）
-                    availablePeople.splice(randomIndex, 1);
-                    
-                    // 添加到已选中列表（不重复模式特有）
+                for (let i = 0; i < drawCount; i++) {
+                    const randomIndex = Math.floor(Math.random() * tempAvailable.length);
+                    const selectedPerson = tempAvailable[randomIndex];
+                    selected.push(selectedPerson);
+
+                    // 更新抽取历史和计数
+                    selectedHistory.push(selectedPerson);
+                    repeatCounts[selectedPerson] = (repeatCounts[selectedPerson] || 0) + 1;
+
+                    // 添加到已选中列表
                     if (!selectedPeople.includes(selectedPerson)) {
                         selectedPeople.push(selectedPerson);
                     }
+
+                    // 从临时数组中移除，避免本次抽取重复
+                    tempAvailable.splice(randomIndex, 1);
                 }
+
+                // 统一从剩余人员中移除已抽取的人
+                selected.forEach(person => {
+                    const index = remainingPeople.indexOf(person);
+                    if (index > -1) {
+                        remainingPeople.splice(index, 1);
+                    }
+                });
             }
 
             // 更新界面
@@ -717,7 +732,7 @@
                 isDrawing = false;
                 
                 // 显示抽取提示
-                if (allowRepeat && repeatCounts[selected[0]] > 1) {
+                if (allowRepeat && selected.length === 1 && repeatCounts[selected[0]] > 1) {
                     showToast(`${selected[0]} 已被抽中 ${repeatCounts[selected[0]]} 次`);
                 }
                 
