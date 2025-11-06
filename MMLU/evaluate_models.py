@@ -34,7 +34,7 @@ B. {choices[1]}
 C. {choices[2]}
 D. {choices[3]}
 
-请回答选项字母（A、B、C或D）"""
+请回答选项字母（A、B、C、D）"""
     return prompt
 
 
